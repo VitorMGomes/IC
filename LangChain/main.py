@@ -1,7 +1,8 @@
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import RetrievalQA
-from vector import retriever  # Importa o retriever criado no vector.py
+from vector import retriever
+import streamlit as st
 
 # Modelo de linguagem
 model = OllamaLLM(model="llama3.2", streaming=False)
@@ -25,14 +26,34 @@ qa_chain = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": prompt}
 )
 
-# Loop de perguntas
-while True:
-    print("\n\n-------------------------------")
-    question = input("Ask your question (Press Q to quit): ")
-    print("\n\n")
+# Título do app
+st.title("🧾 Slip Pay Agent")
 
-    if question.lower() == "q":
-        break
+# Inicializa histórico de mensagens
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-    result = qa_chain.invoke({"query": question})
-    print(result)
+# Exibe histórico
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Entrada do usuário
+user_input = st.chat_input("Digite sua pergunta sobre a folha de pagamento")
+
+if user_input:
+    # Mostra mensagem do usuário
+    st.chat_message("user").markdown(user_input)
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    # Consulta o modelo via LangChain
+    with st.spinner("Consultando IA..."):
+        result = qa_chain.invoke({"query": user_input})
+        response = result["result"]
+
+    # Mostra resposta do agente
+    with st.chat_message("assistant"):
+        st.markdown(response)
+
+    # Salva no histórico
+    st.session_state.messages.append({"role": "assistant", "content": response})
