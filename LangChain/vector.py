@@ -46,6 +46,8 @@ vector_store = Chroma(
 # Adiciona os documentos (só na primeira vez)
 if add_documents:
     vector_store.add_documents(documents=documents, ids=ids)
+    print(documents[0].page_content)
+
 
 # Cria o retriever para buscas semânticas
-retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+retriever = vector_store.as_retriever(search_kwargs={"k": 10})
